@@ -2,5 +2,8 @@ using Oipd
 using Test
 
 @testset "Oipd.jl" begin
-    # Write your tests here.
+
+    @test Oipd.greet_your_package_name() == "Hello Oipd!"
+    @test Oipd.greet_your_package_name() != "Hello world!"
+
 end

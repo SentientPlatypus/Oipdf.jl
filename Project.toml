@@ -3,7 +3,15 @@ uuid = "d5722cbd-5612-498c-a56c-8c01aca498af"
 authors = ["Gene Wicaksono"]
 version = "1.0.0-DEV"
 
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+YFinance = "e4b3b0a2-f9a3-42f3-aabb-32142cceaf77"
+
 [compat]
+DataFrames = "1.8.1"
+PythonCall = "0.9.31"
+YFinance = "0.1.11"
 julia = "1.10.10"
 
 [extras]
