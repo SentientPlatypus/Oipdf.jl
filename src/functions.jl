@@ -1,8 +1,28 @@
 using YFinance
-
+using Dates
 
 function greet_your_package_name()
     return "Hello Oipd!"
+end
+
+function paritize(spot::Float64, call_df::DataFrame, put_df::DataFrame, expiry_dt::String, rate::Float64)
+    
+    calls_otm = filter(:inTheMoney => ==(false), call_df)
+    puts_otm = filter(:inTheMoney => ==(false), put_df)
+
+    T = Float64((Date(expiry_dt) - today()).value) / 365.0
+
+    puts_otm.synth_call_price = puts_otm.mid .+ spot .- puts_otm.strike * exp(-rate * T)
+
+    synth_calls = copy(puts_otm)
+    rename!(synth_calls, :synth_call_price => :mid)
+
+    call_price_vs_strike = calls_otm[:, [:strike, :mid]]
+    put_price_vs_strike = synth_calls[:, [:strike, :mid]]
+
+    paritized_data = hcat(call_price_vs_strike, put_price_vs_strike)
+
+    return paritized_data
 end
 
 
