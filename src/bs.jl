@@ -47,7 +47,7 @@ function f′(bs::BlackScholesMerton)
     return S * sqrt(τ) * pdf(Normal(), d1)
 end
 
-function newtons(bs::BlackScholesMerton, option_type::OptionType, market_price::Float64; tol=1e-6, max_iter=100)
+function newtons(bs::BlackScholesMerton, option_type::OptionType, market_price::Float64; tol=1e-6, max_iter=100, show=false)
     "Newton's method to find the implied volatility given a market price. returns the resulting σ, and updates the black scholes struct with said σ"
     σ = bs.σ 
     for i in 1:max_iter
@@ -60,7 +60,16 @@ function newtons(bs::BlackScholesMerton, option_type::OptionType, market_price::
             return σ
         end
 
+        if f_prime_val < 1e-12
+            error("Vega too small; Newton unstable at strike=$(bs.K)")
+        end
+
         σ -= f_val / f_prime_val
+        σ = clamp(σ, 1e-8, 5.0)
+
+        if show && i % 20 == 0
+            @show i bs.K σ f_val f_prime_val
+        end
     end
     error("Newton's method did not converge")
 end

@@ -1,5 +1,8 @@
 using Dates
 using DataFrames
+using Dierckx
+
+include("bs.jl")
 
 function greet_your_package_name()
     return "Hello Oipd!"
@@ -26,36 +29,119 @@ function paritize(spot::Float64, call_df::DataFrame, put_df::DataFrame, expiry_d
     put_price_vs_strike = synth_calls[:, [:strike, :price]]
 
     paritized_data = vcat(call_price_vs_strike, put_price_vs_strike)
+    sort!(paritized_data, :strike)
 
     return paritized_data
 end
 
 
-function price_to_IV(options::DataFrame, spot::Float64, rate::Float64, expiry_dt::String)
+function add_IV_column(paritized::DataFrame, spot::Float64, rate::Float64, expiry_dt::String)
+    "Adds an implied volatility column to the paritized dataframe using newtons method."
 
-    init_guess = 0.2
+    τ = get_τ(expiry_dt)
+    t = 0.0
+    T = τ
 
-    return 0.2
+    paritized.iv = Vector{Float64}(undef, nrow(paritized))
+
+    for (i, row) in enumerate(eachrow(paritized))
+        K = Float64(row.strike)
+        mkt = Float64(row.price) 
+        show_logs = i % 50 == 0
+
+        bs = BlackScholesMerton(spot, K, T, t, rate, 0.20)
+
+        paritized.iv[i] = try
+            newtons(bs, Call, mkt; tol=1e-8, max_iter=200, show=show_logs)
+        catch
+            NaN
+        end
+    end
+
+    return paritized
 end
 
-function gaussian_smooth(data::Vector{Float64}, kernel_size::Int)
-    # Implement the logic to perform Gaussian smoothing
-    # ...
-    return smoothed_data
+function gaussian_smooth(paritized_with_iv::DataFrame, kernel_size::Int)
+    N = nrow(paritized_with_iv)
+
+    strikes = paritized_with_iv.strike
+    values  = paritized_with_iv.iv
+
+    smoothed = similar(values)
+
+    for i in 1:N
+        j_min = max(1, i - kernel_size)
+        j_max = min(N, i + kernel_size)
+
+        weights_sum = 0.0
+        value_sum   = 0.0
+
+        for j in j_min:j_max
+            w = exp(- (i - j)^2 / (2 * kernel_size^2))
+            weights_sum += w
+            value_sum   += w * values[j]
+        end
+
+        smoothed[i] = value_sum / weights_sum
+    end
+
+    return DataFrame(
+        strike = strikes,
+        iv = smoothed
+    )
 end
 
-function fit_spline(data::Vector{Float64}, degree::Int)
-    # Implement the logic to fit a spline to the data
-    # ...
-    return spline
+function remove_nans(data::DataFrame)
+    filtered = filter(row -> isfinite(row.iv), data)
+    return filtered
+end
+
+function fit_iv_spline(smoothed_data::DataFrame, s=1e-4)
+    K = Float64.(smoothed_data.strike)
+    iv = Float64.(smoothed_data.iv)
+    spl = Spline1D(K, iv; k=3, s=s)
+
+    return spl
+end
+
+function reprice_with_spline(paritized::DataFrame, spot::Float64, rate::Float64, expiry_dt::String, spline)
+    """Given a spline that was fitted in the iv-space, reprice the paritized data using black scholes, ensuring a smooth price curve."""
+    τ = get_τ(expiry_dt)
+    t = 0.0
+
+    prices = Vector{Float64}(undef, nrow(paritized))
+
+    for (i, row) in enumerate(eachrow(paritized))
+        K = Float64(row.strike)
+        σ = spline(K)
+
+        bs = BlackScholesMerton(spot, K, τ, t, rate, σ)
+        prices[i] = bs(Call)
+    end
+
+    return DataFrame(
+        strike = paritized.strike,
+        price = prices
+    )
+end
+
+function fit_price_spline(paritized::DataFrame, s=1e-4)
+    K = Float64.(paritized.strike)
+    prices = Float64.(paritized.price)
+    spl = Spline1D(K, prices; k=3, s=s)
+
+    return spl
 end
 
 
-function Breeden_Litzenberger(data::Vector{Float64})
-    # Implement the logic to calculate Breeden-Litzenberger formula
-    # ...
-    return result
+function Breeden_Litzenberger(k::Float64, spl_price::Spline1D, rate::Float64, expiry_dt::String)
+    """Using the Breeden_Litzenberger forrmula, this computes the risk-neutral PDF at strike k given a price spline."""
+    T = get_τ(expiry_dt)
+    d2C = derivative(spl_price, k, 2)
+    q = exp(rate * T) * d2C
+    return q
 end
+
 
 
 export greet_your_package_name
