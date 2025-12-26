@@ -20,7 +20,24 @@ function get_option_prices(ticker::String, expiry_date::String)
     call_df.mid = (call_df.ask .+ call_df.bid) ./ 2
     put_df.mid = (put_df.ask .+ put_df.bid) ./ 2
 
+    nq, n = quote_health(call_df)
+    if nq == 0
+        @warn "No live bid/ask quotes from Yahoo for calls. Falling back to lastPrice only; results may be unreliable."
+        call_df.mid = call_df.lastPrice .+ 0.0
+    end
+
+    nq, n = quote_health(put_df)
+    if nq == 0
+        @warn "No live bid/ask quotes from Yahoo for puts. Falling back to lastPrice only; results may be unreliable."
+        put_df.mid = put_df.lastPrice .+ 0.0
+    end
+
     return call_df, put_df
+end
+
+function quote_health(df::DataFrame)
+    q = (df.bid .> 0) .& (df.ask .> 0)
+    return count(q), nrow(df)
 end
 
 function get_spot_price(ticker::String)

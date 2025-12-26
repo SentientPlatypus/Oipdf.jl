@@ -17,6 +17,8 @@ function paritize(spot::Float64, call_df::DataFrame, put_df::DataFrame, expiry_d
     calls_otm = filter(:inTheMoney => ==(false), call_df)
     puts_otm = filter(:inTheMoney => ==(false), put_df)
 
+    println(names(call_df))
+
     τ = get_τ(expiry_dt)
 
     puts_otm.synth_call_price = puts_otm.mid .+ spot .- puts_otm.strike * exp(-rate * τ)
@@ -30,6 +32,7 @@ function paritize(spot::Float64, call_df::DataFrame, put_df::DataFrame, expiry_d
 
     paritized_data = vcat(call_price_vs_strike, put_price_vs_strike)
     sort!(paritized_data, :strike)
+
 
     return paritized_data
 end
