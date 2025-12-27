@@ -151,10 +151,42 @@ function Breeden_Litzenberger(K::Float64, spot::Float64, iv_fun::Function, r::Fl
 
     C(Kx) = BlackScholesMerton(spot, Kx, T, 0.0, r, iv_fun(Kx))(Call)
 
-    d2C = (C(K+h) - 2C(K) + C(K-h)) / h^2
+    if K <= h
+        d2C = (C(K + 2h) - 2C(K + h) + C(K)) / (h^2)
+    else
+        d2C = (C(K + h) - 2C(K) + C(K - h)) / (h^2)
+    end
     return exp(r*T) * d2C
 end
 
+
+function prob_at_or_above(K::Float64, spot::Float64, iv_fun::Function, r::Float64, expiry_dt::String)
+    "Computes the risk-neutral probability that the underlying will be above strike K at expiry using the Breeden-Litzenberger formula.
+    This is done by taking the cdf at K, and subtracting it from 1."
+    return 1.0 - prob_below(K, spot, iv_fun, r, expiry_dt)
+end
+
+
+function prob_below(K::Float64, spot::Float64, iv_fun::Function, r::Float64, expiry_dt::String)
+    "Computes the risk-neutral probability that the underlying will be below strike K at expiry using the Breeden-Litzenberger formula.
+    This is done by integrating the risk-neutral PDF from 0 to K. using the trapezoidel rule.
+    This is the cdf at K."
+
+    integrand(k) = Breeden_Litzenberger(k, spot, iv_fun, r, expiry_dt)
+
+    lower_limit = 1.0
+    num_points = 10000
+    dk = (K - lower_limit) / num_points
+
+    integral = 0.0
+    for i in 0:(num_points - 1)
+        k1 = lower_limit + i * dk
+        k2 = lower_limit + (i + 1) * dk
+        integral += 0.5 * (integrand(k1) + integrand(k2)) * dk
+    end
+
+    return integral
+end
 
 
 export greet_your_package_name

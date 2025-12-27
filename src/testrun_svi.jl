@@ -38,6 +38,31 @@ fit, iv_fun = fit_svi_smile(
 repriced_paritized = reprice(paritized, spot, rate, expiry, iv_fun)
 
 spl_price = fit_price_spline(repriced_paritized, 1e-4)
+
+
+
+strike_price_to_analyze = 220.0
+
+p_below = prob_below(
+    strike_price_to_analyze,
+    spot,
+    iv_fun,
+    rate,
+    expiry
+)
+
+p_above_strike = prob_at_or_above(
+    strike_price_to_analyze,
+    spot,
+    iv_fun,
+    rate,
+    expiry
+)
+
+
+println("Probability that the price will be above $(strike_price_to_analyze) at expiry: $(p_above_strike)")
+println("Probability that the price will be below $(strike_price_to_analyze) at expiry: $(p_below)")
+
 using Plots
 plot(
     paritized.strike,
