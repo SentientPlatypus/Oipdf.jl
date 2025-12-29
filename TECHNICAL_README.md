@@ -83,6 +83,49 @@ For optimization stability, parameters are reparameterized:
 - $\rho = \rho_{\text{bound}} \cdot \tanh(\rho_{\text{raw}})$
 - $\sigma = \sigma_{\text{min}} + \exp(\sigma_{\text{raw}})$
 
+### Why Not Spline Fitting?
+
+A common alternative to parametric models like SVI is to fit the volatility smile using splines or other interpolation methods. While seemingly simpler, spline fitting introduces several critical problems that make it unsuitable for risk-neutral density extraction:
+
+#### Arbitrage Violations
+Spline interpolation can create arbitrage opportunities by violating fundamental no-arbitrage conditions. The resulting volatility surface may have negative densities or inconsistent pricing.
+
+#### Extrapolation Issues
+Splines perform poorly outside the range of observed data points. Since risk-neutral density estimation requires evaluating the volatility surface over a continuous domain, poor extrapolation can lead to nonsensical results.
+
+#### Numerical Instability
+The second derivatives required for Breeden-Litzenberger density extraction are highly sensitive to the smoothness and continuity of the volatility surface. Splines can introduce unwanted oscillations or discontinuities.
+
+#### Example: Spline vs SVI Fitting
+
+The following plots demonstrate the problems with spline fitting compared to the SVI model:
+
+![Spline-fitted Implied Volatility Smile](plots/0_example_bad_fit/AMD_5_iv_spline.png)
+
+*Spline interpolation of the volatility smile often creates unrealistic shapes and extrapolation behavior.*
+
+![SVI-fitted Implied Volatility Smile](examples/example_plots/AAPL/2026-01-09/5_iv_svi.png)
+
+*The SVI model provides smooth, arbitrage-free volatility surfaces with proper asymptotic behavior.*
+
+![Spline-based Option Prices](plots/0_example_bad_fit/AMD_7_price_spline.png)
+
+*Prices derived from spline-fitted volatilities can exhibit non-monotonic behavior and arbitrage opportunities.*
+
+![SVI-based Option Prices](examples/example_plots/AAPL/2026-01-09/6_price_vs_strike_repriced.png)
+
+*SVI-generated prices maintain proper convexity and no-arbitrage properties.*
+
+![Spline-derived Risk-Neutral PDF](plots/0_example_bad_fit/AMD_8_pdf.png)
+
+*The PDF from spline fitting shows negative densities and unrealistic shapes due to arbitrage violations.*
+
+![SVI-derived Risk-Neutral PDF](examples/example_plots/AAPL/2026-01-09/7_pdf_numerical.png)
+
+*The SVI-based PDF is smooth, positive, and integrates to 1, representing a proper probability distribution.*
+
+The SVI model's parametric form ensures mathematical consistency and prevents arbitrage, making it the preferred choice for applications requiring reliable risk-neutral density estimation.
+
 ### Risk-Neutral Density Estimation
 
 #### Breeden-Litzenberger Formula

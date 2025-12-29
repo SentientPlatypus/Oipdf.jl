@@ -102,14 +102,17 @@ end
 
 function plot_pdf_numerical(repriced_paritized, spot, iv_fun, rate, τ, ticker, dir::String)
     K = Float64.(repriced_paritized.strike)
-    K_dense = range(minimum(K), maximum(K), length=500)
+    std_K = std(K) #this is std of strike, not pdf btw.
+    K_min = spot - 1 * std_K
+    K_max = spot + 1 * std_K
+    K_dense = range(K_min, K_max, length=500)
     plot(
         K_dense,
         [Breeden_Litzenberger(k, spot, iv_fun, rate, τ) for k in K_dense],
         label = "exp(rτ)d^2C/dK^2",
         linewidth = 2,
         xlabel = "Strike",
-        ylabel = "Price",
+        ylabel = "Probability Density",
         title = "$(ticker) Probability Density function numerical (Breeden-Litzenberger)",
         legend = true,
         size=(800,600)

@@ -67,6 +67,8 @@ Pkg.add("https://github.com/SentientPlatypus/Oipd.jl")
 - Risk-neutral density plots
 - SVI model fit diagnostics
 
+![Risk-Neutral Probability Density Function](examples/example_plots/AAPL/2026-01-09/7_pdf_numerical.png)
+
 ## Example Usage
 
 ```julia
