@@ -5,7 +5,7 @@ using .Oipd
 
 println("this is running top_level_test.jl")
 
-savedir = "plots/0_toplevel"
+savedir = "examples/example_plots"
 ticker ="AAPL"
 
 p_below = prob_below(ticker, 250.0, get_closest_expiry(ticker), savedir)
