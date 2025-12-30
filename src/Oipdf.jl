@@ -66,9 +66,7 @@ module Oipdf
         return 1 - prob_below(ticker, strike_price, expiry, savedir)
     end
 
-    export plot_pdf
     export prob_at_or_above
     export prob_below
     export get_closest_expiry
-
 end
