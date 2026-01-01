@@ -1,8 +1,8 @@
-# Oipdf.jl Technical Documentation
+# OptionsImpliedPDF.jl Technical Documentation
 
 ## Overview
 
-Oipdf.jl is a Julia package implementing advanced options pricing models and risk-neutral probability analysis. The package combines real-time market data with sophisticated mathematical models to provide accurate pricing and risk assessment tools.
+OptionsImpliedPDF.jl is a Julia package implementing advanced options pricing models and risk-neutral probability analysis. The package combines real-time market data with sophisticated mathematical models to provide accurate pricing and risk assessment tools.
 
 ## Process Overview
 
@@ -260,4 +260,4 @@ plot_pdf_numerical(data, spot, iv_fun, rate, τ, ticker, savedir)
 - **Plots**: Visualization
 - **PythonCall**: Yahoo Finance integration
 - **Distributions**: Statistical functions</content>
-<parameter name="filePath">/mnt/d/Code/Machine Learning/Oipdf/TECHNICAL_README.md
+<parameter name="filePath">/mnt/d/Code/Machine Learning/OptionsImpliedPDF/TECHNICAL_README.md
